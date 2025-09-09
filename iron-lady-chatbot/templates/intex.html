@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Iron Lady FAQ Chatbot</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background:#f4f6f8; }
+    .chat { max-width:700px; margin:40px auto; background:white; border-radius:8px; padding:16px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
+    .messages { height: 400px; overflow-y:auto; padding:8px; }
+    .bubble { display:inline-block; padding:10px 14px; border-radius:18px; margin:8px 0; max-width:80%; }
+    .user { background:#0b93f6; color:white; float:right; }
+    .bot { background:#eee; color:#111; float:left; }
+    .input-area { display:flex; gap:8px; margin-top:12px; }
+    input[type="text"] { flex:1; padding:10px; border-radius:8px; border:1px solid #ddd; }
+    button { padding:10px 12px; border-radius:8px; border:none; background:#0b93f6; color:white; cursor:pointer; }
+    .clearfix { clear:both; }
+    small.source { color:#666; display:block; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <h3>Iron Lady — FAQ Chatbot</h3>
+    <div class="messages" id="messages"></div>
+
+    <div class="input-area">
+      <input id="msg" type="text" placeholder="Ask: What programs do you offer?" />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+<script>
+const messagesEl = document.getElementById("messages");
+const input = document.getElementById("msg");
+
+function appendBubble(text, who, source) {
+  const div = document.createElement("div");
+  div.className = "bubble " + (who === 'user' ? 'user' : 'bot');
+  div.innerHTML = text + (source ? `<small class="source">source: ${source}</small>` : '');
+  messagesEl.appendChild(div);
+  const cf = document.createElement("div"); cf.className = "clearfix";
+  messagesEl.appendChild(cf);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if(!text) return;
+  appendBubble(text, 'user');
+  input.value = '';
+  appendBubble("...", 'bot'); // placeholder
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    const data = await res.json();
+    // remove last placeholder
+    const last = messagesEl.querySelectorAll('.bubble.bot');
+    const placeholder = last[last.length-1];
+    if (placeholder) placeholder.remove();
+    appendBubble(data.reply, 'bot', data.source || '');
+  } catch (err) {
+    appendBubble("Error contacting server: " + err.message, 'bot');
+  }
+}
+
+document.getElementById("send").addEventListener("click", sendMessage);
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+</script>
+</body>
+</html>
