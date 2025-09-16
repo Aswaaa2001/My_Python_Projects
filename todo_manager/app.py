@@ -65,8 +65,8 @@ def delete_task(id):
     flash("Task deleted!", "danger")
     return redirect(url_for("index"))
 
-# ----------------- Run App -----------------
+
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # ✅ Create tables on startup (Flask 3.x safe)
+        db.create_all() 
     app.run(debug=True)
